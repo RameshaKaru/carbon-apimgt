@@ -52,6 +52,7 @@ import org.wso2.carbon.apimgt.impl.certificatemgt.GatewayCertificateManager;
 import org.wso2.carbon.apimgt.impl.certificatemgt.ResponseCode;
 import org.wso2.carbon.apimgt.impl.clients.RegistryCacheInvalidationClient;
 import org.wso2.carbon.apimgt.impl.clients.TierCacheInvalidationClient;
+import org.wso2.carbon.apimgt.impl.istiomgt.*;
 import org.wso2.carbon.apimgt.impl.containermgt.K8sClient;
 import org.wso2.carbon.apimgt.impl.containermgt.PrivateJet;
 import org.wso2.carbon.apimgt.impl.containermgt.SwaggerCreator;
@@ -6336,6 +6337,24 @@ class APIProviderImpl extends AbstractAPIManager implements APIProvider {
      * @throws IOException            if getTenantConfigContent returns nothing (But Never Happens that)
      * @throws ParseException         for json file reading
      */
+//    @Override
+//    public void publishInPrivateJet(API api, APIIdentifier apiIdentifier)
+//            throws UserStoreException, RegistryException, IOException, ParseException, APIManagementException {
+//
+//        String content = getTenantConfigContent();
+//        TenantConfReader newReader = new TenantConfReader();
+//        K8sClient k8sClient = newReader.readTenant(content);
+//        PrivateJet privateJet = new PrivateJet();
+//        log.info("Publishing in Private Jet Mode");
+//        SwaggerCreator swaggerCreator = new SwaggerCreator();
+//        String swagger = swaggerCreator.
+//                getOASDefinitionForPublisher(api, OASParserUtil.getAPIDefinition(apiIdentifier, registry),
+//                        k8sClient.getBasicSecurityCustomResourceName(),
+//                        k8sClient.getJwtSecurityCustomResourceName(),
+//                        k8sClient.getOauthSecurityCustomResourceName());
+//
+//        privateJet.publishInPrivateJetMode(apiIdentifier, k8sClient, swaggerCreator, swagger);
+//    }
     @Override
     public void publishInPrivateJet(API api, APIIdentifier apiIdentifier)
             throws UserStoreException, RegistryException, IOException, ParseException, APIManagementException {
@@ -6343,17 +6362,14 @@ class APIProviderImpl extends AbstractAPIManager implements APIProvider {
         String content = getTenantConfigContent();
         TenantConfReader newReader = new TenantConfReader();
         K8sClient k8sClient = newReader.readTenant(content);
-        PrivateJet privateJet = new PrivateJet();
-        log.info("Publishing in Private Jet Mode");
-        SwaggerCreator swaggerCreator = new SwaggerCreator();
-        String swagger = swaggerCreator.
-                getOASDefinitionForPublisher(api, OASParserUtil.getAPIDefinition(apiIdentifier, registry),
-                        k8sClient.getBasicSecurityCustomResourceName(),
-                        k8sClient.getJwtSecurityCustomResourceName(),
-                        k8sClient.getOauthSecurityCustomResourceName());
+        IstioDeployer istioDeployer = new IstioDeployer();
 
-        privateJet.publishInPrivateJetMode(apiIdentifier, k8sClient, swaggerCreator, swagger);
+        log.info("Publishing in istio");
+
+        istioDeployer.publishToIstio(k8sClient, apiIdentifier, api);
+
     }
+
 
     private void cleanUpPendingAPIStateChangeTask(int apiId) throws WorkflowException, APIManagementException {
         //Run cleanup task for workflow
